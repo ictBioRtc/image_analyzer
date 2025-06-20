@@ -440,9 +440,8 @@ def load_data(file_path):
     except Exception as e:
         return None, f"Error loading CSV file: {e}"
 
-
 def summary_by_town(df):
-    """Generate summary statistics by town."""
+    """Generate summary statistics by town - improved formatting."""
     if df is None or len(df) == 0:
         return "No data available for summary."
     
@@ -453,24 +452,45 @@ def summary_by_town(df):
     
     town_summary = town_summary.sort_values('total_people', ascending=False)
     
-    result = "=== SUMMARY BY TOWN ===\n"
-    result += tabulate(town_summary, headers='keys', tablefmt='simple', showindex=False)
+    # Better column formatting
+    display_summary = town_summary.copy()
+    display_summary['town'] = display_summary['town'].str.title()
+    display_summary.columns = ['Town', 'People', 'Affiliations']
+    
+    result = "\n" + "="*50 + "\n"
+    result += "SUMMARY BY TOWN\n"
+    result += "="*50 + "\n"
+    
+    result += tabulate(
+        display_summary, 
+        headers='keys', 
+        tablefmt='psql',
+        showindex=False,
+        floatfmt='.0f'
+    )
     
     # Display top affiliations for each town
-    result += "\n\n=== TOP AFFILIATIONS BY TOWN ===\n"
+    result += "\n\n" + "="*50 + "\n"
+    result += "TOP AFFILIATIONS BY TOWN\n"
+    result += "="*50 + "\n"
+    
     for town in town_summary['town']:
         town_data = df[df['town'] == town]
         top_affiliations = town_data['affiliation'].value_counts().head(3)
         
-        result += f"\n{town.title()}:\n"
-        for affiliation, count in top_affiliations.items():
-            result += f"  - {affiliation.title()}: {count} people\n"
+        result += f"\n🏙️  {town.upper()}:\n"
+        result += "   " + "-"*30 + "\n"
+        
+        for rank, (affiliation, count) in enumerate(top_affiliations.items(), 1):
+            result += f"   {rank}. {affiliation.title():<20} → {count} people\n"
+        
+        if len(top_affiliations) == 0:
+            result += "   No data available\n"
     
     return result
 
-
 def summary_by_affiliation(df):
-    """Generate summary statistics by affiliation."""
+    """Generate summary statistics by affiliation - improved version of your current function."""
     if df is None or len(df) == 0:
         return "No data available for summary."
     
@@ -481,18 +501,41 @@ def summary_by_affiliation(df):
     
     affiliation_summary = affiliation_summary.sort_values('total_people', ascending=False)
     
-    result = "=== SUMMARY BY AFFILIATION ===\n"
-    result += tabulate(affiliation_summary, headers='keys', tablefmt='simple', showindex=False)
+    # Better column formatting
+    display_summary = affiliation_summary.copy()
+    display_summary['affiliation'] = display_summary['affiliation'].str.title()
+    display_summary.columns = ['Affiliation', 'People', 'Towns']
+    
+    result = "\n" + "="*50 + "\n"
+    result += "SUMMARY BY AFFILIATION\n"
+    result += "="*50 + "\n"
+    
+    # Use 'psql' format for better readability
+    result += tabulate(
+        display_summary, 
+        headers='keys', 
+        tablefmt='psql',  # Changed from 'simple' to 'psql'
+        showindex=False,
+        floatfmt='.0f'
+    )
     
     # Display top towns for each affiliation
-    result += "\n\n=== TOP TOWNS BY AFFILIATION ===\n"
+    result += "\n\n" + "="*50 + "\n"
+    result += "TOP TOWNS BY AFFILIATION\n"
+    result += "="*50 + "\n"
+    
     for affiliation in affiliation_summary['affiliation'].head(5).tolist():
         affiliation_data = df[df['affiliation'] == affiliation]
         top_towns = affiliation_data['town'].value_counts().head(3)
         
-        result += f"\n{affiliation.title()}:\n"
-        for town, count in top_towns.items():
-            result += f"  - {town.title()}: {count} people\n"
+        result += f"\n🏛️  {affiliation.upper()}:\n"
+        result += "   " + "-"*30 + "\n"
+        
+        for rank, (town, count) in enumerate(top_towns.items(), 1):
+            result += f"   {rank}. {town.title():<20} → {count} people\n"
+        
+        if len(top_towns) == 0:
+            result += "   No data available\n"
     
     return result
 
